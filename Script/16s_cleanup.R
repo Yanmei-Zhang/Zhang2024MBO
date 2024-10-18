@@ -4,7 +4,7 @@
 # 16s amplicon cleanup in Cloquet DNA optimization trial
   
 ## Load packages and data
-ps.16s = readRDS("../03_tophyloseq/results/ps.16s.rds")
+ps.16s = readRDS("ps.16s.rds")
 sample_data(ps.16s)$Protocol <-factor(sample_data(ps.16s)$Protocol, level = c("QIAGEN", "CTAB"))
 
 ## Statistic of raw reads befpre processing
