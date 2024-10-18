@@ -15,6 +15,7 @@ dada_track = read.delim("dada2_its2_track.txt")
 dada_track = read.delim("dada2_16s_track.txt")
 
 dada_track <-  dada_track %>% mutate(SampleID = row.names(.))
+depth_track4 <- read.csv("sample_reading_depth_track_ntaxa.csv", row.names = 1)
 
 depth_track5 <- merge(dada_track, 
                       depth_track4[, c("SampleID", "Tree_log", "Tree_host", "Protocol",
