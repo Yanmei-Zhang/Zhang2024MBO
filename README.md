@@ -6,7 +6,7 @@ Please refer to this DADA2 workflow tutorial [dada2_SchillingLab](https://github
 
 - /data # ASV table and metadata
 - /Script # Gneeral script in this study
-- /Figures # Figures, and their corresponding raw data, R Notebook scripts and output HTML format results
+- /Figures # Figures, and their corresponding raw data, R Notebook scripts and output results
 
 If you prefer to use the scripts in this paper, please cite:
 
