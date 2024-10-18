@@ -1,6 +1,6 @@
 # Zhang2024MO
 
-* This is the scripts for amplicon sequencing data analysis, statistics, and plotting figures in the paper "Evaluation of DNA extraction methods in microbial community profiling associated with deadwood decomposition".*
+*This is the scripts for amplicon sequencing data analysis, statistics, and plotting figures in the paper "Evaluation of DNA extraction methods in microbial community profiling associated with deadwood decomposition".*
 
 Please refer to this DADA2 workflow tutorial [dada2_SchillingLab] (https://github.com/Yanmei-Zhang/DADA2_SchillingLab) to process amplicon dataset to a ASV table.
 
