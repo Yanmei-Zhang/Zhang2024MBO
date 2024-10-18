@@ -10,9 +10,9 @@ Let's see the tracking summary of sequencing depth during reads processing
 ```{r}
 # Loading reads track file
 ## for fungi
-dada_track = read.delim("../03_tabletax/dada2_its2_track.txt")
+dada_track = read.delim("dada2_its2_track.txt")
 ## for bacteria, change it into
-dada_track = read.delim("../02_tabletax/dada2_16s_track.txt")
+dada_track = read.delim("dada2_16s_track.txt")
 
 dada_track <-  dada_track %>% mutate(SampleID = row.names(.))
 
