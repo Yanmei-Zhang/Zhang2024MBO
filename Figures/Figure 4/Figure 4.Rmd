@@ -1,5 +1,5 @@
 ---
-title: "Figure 3. . Nonmetric multidimensional scaling (NMDS) ordination plots"
+title: "Figure 4. Nonmetric multidimensional scaling (NMDS) ordination plots"
 author:"Yanmei Zhang"
 data:"2024/1/1"
 output: html_notebook
