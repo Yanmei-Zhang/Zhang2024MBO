@@ -1,0 +1,264 @@
+---
+title: "Figure 5. Relative abundances of fungal (A) and bacterial (B) taxa at the genus level "
+author:"Yanmei Zhang"
+data:"2024/1/1"
+output: html_notebook
+---
+
+```{r}
+# How many phylum would be present after filtering? # 12
+length(get_taxa_unique(ps2, taxonomic.rank="Phylum"))
+
+# Transform into relative abundance
+ps2.rel<- transform_sample_counts(ps2, function(x){x /sum(x)})
+
+# Merge taxa at phylum level
+ps2.phylum <- aggregate_taxa(ps2.rel, "Phylum")
+
+phylum.sort <- names(sort(taxa_sums(ps2.phylum), decreasing=F))
+
+unknown.phylum.name <- "Unknown"
+phylum.name <- subset(phylum.sort, ! phylum.sort %in% unknown.phylum.name)
+
+phylum.sort.new <- c(unknown.phylum.name, phylum.name)
+
+# Adjust phylum label
+phylum.label <- str_split_fixed(phylum.name, "__", 2)[, 2]
+
+phylum.label.new <-c(unknown.phylum.name, phylum.label)
+
+```
+
+## Genus level
+```{r}
+# How many genera would be present after filtering? # 449 with NA included
+length(get_taxa_unique(ps2,taxonomic.rank="Genus"))
+ 
+ps2.genus.glom <- tax_glom(ps2.rel,"Genus", NArm=FALSE) ##546taxa
+
+ps2.genus.unknown <-subset_taxa(ps2.genus.glom, is.na(Genus)) #98
+filter_taxa(ps2.genus.unknown, function(x) {sum(x >= 0.05)} >= 6, TRUE) #3
+
+ps2.genus.unknown.phy <-tax_glom(ps2.genus.unknown, "Phylum", NArm=FALSE) #7
+
+ps2.genus.known <- subset_taxa(ps2.genus.glom, ! is.na(Genus)) #448
+
+ps2.genus.most <- filter_taxa(ps2.genus.known, function(x) {sum(x >= 0.05)} >= 6, TRUE) #16
+
+ps2.genus.rare <- filter_taxa(ps2.genus.known, function(x) {sum(x >= 0.05)} < 6, TRUE) #432
+
+ps2.genus.rare.phy <- tax_glom(ps2.genus.rare, "Phylum", NArm=FALSE) #11
+
+ps2.mix <- merge_phyloseq(ps2.genus.unknown.phy, ps2.genus.rare.phy, ps2.genus.most) #34
+
+tax4 <-  as.data.frame(tax_table(ps2.mix))
+
+tax4 <- tax4 %>%
+  dplyr::mutate(mix = tax4$Genus, .before = "Phylum")
+
+tax4 <- tax4 %>%
+  mutate(mix = replace(mix, is.na(mix), Phylum[is.na(mix)])) 
+
+tax4 <- as.matrix(tax4)
+ps2.mix1 <- merge_phyloseq(ps2.mix, tax_table(tax4)) #34
+
+ps2.mix.glom <- aggregate_taxa(ps2.mix1, "mix") #28=16+12
+```
+
+
+Make adjustment of order of genus name 
+```{r}
+genus.sort <- names(sort(taxa_sums(ps2.mix.glom), decreasing=F))
+
+unknown.phylum.name <- "Unknown"
+phylum.name <-  str_subset(genus.sort, pattern ="p__")
+phylum.name <- phylum.sort.new 
+
+genus.name <-  str_subset(genus.sort , pattern = "g__") 
+
+genus.name.A <- subset(genus.name, genus.name %in% 
+                         tax_table(ps2.mix.glom)[tax_table(ps2.mix.glom)[, "Phylum"] == 
+                                                   "p__Ascomycota", "mix"])
+genus.name.B <- subset(genus.name, genus.name %in% 
+                         tax_table(ps2.mix.glom)[tax_table(ps2.mix.glom)[, "Phylum"] == 
+                                                   "p__Basidiomycota", "mix"])
+genus.sort.new <- c(phylum.name,genus.name.A, genus.name.B)
+
+# Adjust genus label
+phylum.label <- phylum.label.new
+phylum.label[c(11, 12)] <- paste("other", phylum.label[c(11, 12)], sep = " ")
+
+genus.label.A <- paste(genus.name.A, "(A)", sep = " ")
+genus.label.B <- paste(genus.name.B, "(B)", sep = " ")
+
+genus.label.A <- str_split_fixed(genus.label.A, "__", 2)[, 2]
+genus.label.B  <- str_split_fixed(genus.label.B , "__", 2)[, 2]
+
+genus.label.new <- c(phylum.label, genus.label.A, genus.label.B)
+
+# Table for ggplot
+genus.mix <- otu_table(ps2.mix.glom) %>% data.frame(check.names = F)
+genus.mix$mix <- factor(rownames(genus.mix), levels = genus.sort.new, labels = genus.label.new)
+genus.mix <- melt(genus.mix, id ="mix")
+names(genus.mix)[2]<- "SampleID"
+names(genus.mix)[3]<- "Relative_abundance"
+
+# Map info
+group <- sample_data(ps2.mix.glom) %>% data.frame(check.names = F)
+group$SampleID <- row.names(group)
+genus.mix_samp<- merge(genus.mix, group, by = 'SampleID')
+
+genus.mix_samp$Protocol <- factor(genus.mix_samp$Protocol, level = c("QIAGEN", "CTAB"))
+```
+
+Composition barplots-fungi
+```{r}
+n <- 28
+
+# Make a color vector
+palette_6 = pal_d3("category20c")(6)
+show_col(palette_6)
+
+palette_10= pal_d3("category10")(10)
+show_col(palette_10)
+
+palette_28 <- c(palette_12_1, palette_6, palette_10)
+show_col(palette_28)
+
+p.genus <- ggplot(genus.mix_samp, aes(as.factor(as.character(Year_since_decay_start)),
+                                100*Relative_abundance, fill = mix)) +
+  geom_col(position = 'stack', width = 0.85) +
+  facet_grid(Tree_log ~ Protocol, scales = 'free_x') +
+  scale_fill_manual(values =  palette_28) +
+  labs(x = 'Year_since_decay_start', y = 'Relative Abundance (%)') +
+  guides(fill = guide_legend(ncol = 2)) +
+  theme_minimal(9) +
+  theme(axis.title.x = element_blank(),
+        legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank()) 
+p.genus
+
+source("src/data_summary.R")
+genus.mix_samp_sum <- data_summary(genus.mix_samp, varname="Relative_abundance", 
+                              groupnames=c("Tree_host","Protocol", 
+                                           "Year_since_decay_start", "mix"))
+
+
+p.genus <- ggplot(genus.mix_samp_sum, aes(as.factor(as.character(Year_since_decay_start)),
+                                    100*Relative_abundance, fill = mix)) +
+  geom_col(position = 'stack', width = 0.85) +
+  facet_grid(Tree_host~Protocol, scales = 'free_x') +
+  scale_fill_manual(values =  palette_28) +
+  labs(x = 'Year_since_decay_start', y = 'Relative Abundance (%)') +
+  guides(fill = guide_legend(ncol = 2)) +
+  theme_minimal(9) +
+  theme(axis.title.x = element_blank(),
+        legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank()) 
+p.genus
+```
+
+
+## For bacteria, too much phylum in the picture so we pick up top 11 phylum and assign the rest as rare phylum
+```{r}
+phylum.sort <- names(sort(taxa_sums(ps2.phylum), decreasing=F))
+phylum.top11 <- phylum.sort[23:33]
+
+phylum.rare <- subset(phylum.sort, ! phylum.sort %in% phylum.top11)
+
+ps2.phylum.new <- ps2.phylum
+tax_table(ps2.phylum.new)[tax_table(ps2.phylum.new)[,"Phylum"] %in% phylum.rare, 
+                         "Phylum"] <- "rare phylum"
+
+# Remove Kingdom
+tax_table(ps2.phylum.new) = tax_table(ps2.phylum.new)[, -1]
+ps2.phylum.new1 <- aggregate_taxa(ps2.phylum.new, "Phylum") #12
+
+
+rare.phylum.name <- "rare phylum"
+
+phylum.sort.new <- c(rare.phylum.name, phylum.top11)
+```
+
+```{r}
+ps2.mix.glom.new <- ps2.mix.glom
+tax_table(ps2.mix.glom.new)[tax_table(ps2.mix.glom.new)[,"mix"] %in% phylum.rare, 
+                            "mix"] <- "rare phylum" 
+tax_table(ps2.mix.glom.new) = tax_table(ps2.mix.glom.new)[, -1]
+
+ps2.mix.glom.new1 <- aggregate_taxa(ps2.mix.glom.new, "mix")
+```
+
+Make adjustment of order of genus name 
+```{r}
+genus.sort <- names(sort(taxa_sums(ps2.mix.glom.new1), decreasing=F))
+
+rare.phylum.name <- "rare phylum"
+
+phylum.name <-  subset(genus.sort, genus.sort %in% phylum.top11)
+
+
+genus.name <- subset(genus.sort, ! genus.sort %in% c(rare.phylum.name,phylum.name))
+
+genus.sort.new <- c(rare.phylum.name,phylum.name, genus.name)
+
+# Table for ggplot
+genus.mix <- otu_table(ps2.mix.glom.new1) %>% data.frame(check.names = F)
+genus.mix$mix <- factor(rownames(genus.mix), levels = genus.sort.new)
+genus.mix <- melt(genus.mix, id ="mix")
+names(genus.mix)[2]<- "SampleID"
+names(genus.mix)[3]<- "Relative_abundance"
+
+# Map info
+group <- sample_data(ps2.mix.glom.new1) %>% data.frame(check.names = F)
+group$SampleID <- row.names(group)
+genus.mix_samp<- merge(genus.mix, group, by = 'SampleID')
+
+genus.mix_samp$Protocol <- factor(genus.mix_samp$Protocol, level = c("QIAGEN", "CTAB"))
+```
+
+Composition barplots-bacteria
+```{r}
+# Make a color vector
+n <- 37
+
+palette_15 = pal_d3("category20c")(15)
+show_col(palette_15)
+
+palette_10 = pal_d3("category10")(10)
+show_col(palette_10)
+
+palette_37 <- c(palette_12_1, palette_15, palette_10)
+show_col(palette_37)
+
+p.genus <- ggplot(genus.mix_samp, aes(as.factor(as.character(Year_since_decay_start)),
+                                100*Relative_abundance, fill = mix)) +
+  geom_col(position = 'stack', width = 0.85) +
+  facet_grid(Tree_log ~ Protocol, scales = 'free_x') +
+  scale_fill_manual(values =  palette_37) +
+  labs(x = 'Year_since_decay_start', y = 'Relative Abundance (%)') +
+  guides(fill = guide_legend(ncol = 2)) +
+  theme_minimal(9) +
+  theme(axis.title.x = element_blank(),
+        legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank()) 
+p.genus
+
+genus.mix_samp_sum <- data_summary(genus.mix_samp, varname="Relative_abundance", 
+                              groupnames=c("Tree_host","Protocol", 
+                                           "Year_since_decay_start", "mix"))
+
+
+p.genus <- ggplot(genus.mix_samp_sum, aes(as.factor(as.character(Year_since_decay_start)),
+                                    100*Relative_abundance, fill = mix)) +
+  geom_col(position = 'stack', width = 0.85) +
+  facet_grid(Tree_host~Protocol, scales = 'free_x') +
+  scale_fill_manual(values =  palette_37) +
+  labs(x = 'Year_since_decay_start', y = 'Relative Abundance (%)') +
+  guides(fill = guide_legend(ncol = 2)) +
+  theme_minimal(9) +
+  theme(axis.title.x = element_blank(),
+        legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank()) 
+p.genus
+```
