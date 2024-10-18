@@ -1,0 +1,99 @@
+Sample.ID,Bacterial_copy_number,16S rRNA comments,Fungal_copy_number,ITS2 comments
+C0,18,Very low copy number: assay performance unknown,1,Very low copy number: assay performance unknown
+C01,563921,,38437,
+C02,721046,,65109,
+C03,793144,,44190,
+C04,439801,,35554,
+C05,314068,,53362,
+C06,1113652,,87175,
+C07,536986,,60754,
+C08,387194,,119093,
+C11,8066,Caution: copy number less than intended sequencing depth,Undetected,Insufficient material: assay failure expected
+C12,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C13,37900,,357,Very low copy number: assay performance unknown
+C14,38987,,71125,
+C15,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C16,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C17,29502,,9,Very low copy number: assay performance unknown
+C18,11452,Caution: copy number less than intended sequencing depth,Undetected,Insufficient material: assay failure expected
+C21,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C22,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C23,92901,,13167,Caution: copy number less than intended sequencing depth
+C24,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C25,269156,,44720,
+C26,9934,Caution: copy number less than intended sequencing depth,Undetected,Insufficient material: assay failure expected
+C27,24086,,9490,Caution: copy number less than intended sequencing depth
+C28,127831,,11604,Caution: copy number less than intended sequencing depth
+C33,203402,,362,Very low copy number: assay performance unknown
+C34,203793,,763,Very low copy number: assay performance unknown
+C35,147421,,448,Very low copy number: assay performance unknown
+C36,20858,,62881,
+C37,75077,,116831,
+C38,101896,,311,Very low copy number: assay performance unknown
+C39,192176,,93,Very low copy number: assay performance unknown
+C40,49919,,17,Very low copy number: assay performance unknown
+C43,826925,,52861,
+C44,1724217,,179149,
+C45,733405,,109728,
+C46,141426,,11544,Caution: copy number less than intended sequencing depth
+C47,87434,,128843,
+C48,473310,,192309,
+C49,502211,,161242,
+C50,760458,,243578,
+C53,38178,,54691,
+C54,122898,,83178,
+C55,44357,,908,Very low copy number: assay performance unknown
+C56,6049,Caution: copy number less than intended sequencing depth,Undetected,Insufficient material: assay failure expected
+C57,37836,,43551,
+C58,Undetected,IInsufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C59,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+C60,Undetected,Insufficient material: assay failure expected,Undetected,Insufficient material: assay failure expected
+Q0,43,Very low copy number: assay performance unknown,Undetected,Insufficient material: assay failure expected
+Q01,845441,,201414,
+Q02,1421073,,524567,
+Q03,1710515,,189192,
+Q04,576195,,44402,
+Q05,695171,,80809,
+Q06,1876284,,169450,
+Q07,2340076,,159535,
+Q08,392639,,172494,
+Q11,566401,,2463374,
+Q12,86537,,2473503,
+Q13,931308,,5553236,
+Q14,384262,,5173203,
+Q15,1062108,,18963784,
+Q16,292544,,8308334,
+Q17,1029162,,10830494,
+Q18,856506,,4048649,
+Q21,507151,,55160,
+Q22,1477821,,177615,
+Q23,2983421,,3329490,
+Q24,4007206,,285312,
+Q25,3238289,,711103,
+Q26,3577713,,753370,
+Q27,279011,,499784,
+Q28,3490062,,145039,
+Q33,3923190,,330,Very low copy number: assay performance unknown
+Q34,200367,,625,Very low copy number: assay performance unknown
+Q35,183674,,660,Very low copy number: assay performance unknown
+Q36,43536,,180415,
+Q37,273020,,570048,
+Q38,493091,,2203,Caution: copy number less than intended sequencing depth
+Q39,353571,,952,Very low copy number: assay performance unknown
+Q40,208604,,578,Very low copy number: assay performance unknown
+Q43,1029035,,42128,
+Q44,762988,,176833,
+Q45,747797,,329951,
+Q46,444591,,403887,
+Q47,450018,,691013,
+Q48,1096221,,956948,
+Q49,1128619,,1165084,
+Q50,739069,,444296,
+Q53,95929,,282294,
+Q54,330231,,536077,
+Q55,471329,,172140,
+Q56,1096951,,998372,
+Q57,251466,,1897865,
+Q58,300336,,603567,
+Q59,608849,,104492,
+Q60,161233,,1168567,
