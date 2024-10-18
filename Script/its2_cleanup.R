@@ -4,7 +4,7 @@
 # ITS2 amplicon cleanup in Cloquet DNA optimization trial"
 
 ## Load packages and data
-ps.its = readRDS("../05_tophyloseq/results/ps.its.rds")
+ps.its = readRDS("ps.its.rds")
 sample_data(ps.its)$Protocol <-factor(sample_data(ps.its)$Protocol, level = c("QIAGEN",
                                                                               "CTAB"))
 ## Statistic of raw reads befpre processing
