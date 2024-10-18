@@ -9,15 +9,15 @@ sapply(c("phyloseq", "Biostrings", "dplyr", "DECIPHER", "msa","phangorn", "ggplo
 ## Import data into phyloseq and build trees (MSI)
 
 # Define meta file path and name
-meta_file <- "data/metadata.tsv"
+meta_file <- "metadata.tsv"
 metadata <- read.delim(meta_file, header=T, row.names = 1)
 
 # Define asv table file and name, convert to matrix
-asv_table <- "../02_tabletax/dada2_16s_counts.txt"
+asv_table <- "dada2_16s_counts.txt"
 asvmat <- as.matrix(read.delim(asv_table))
 
 # Define taxa table file and name, convert to matrix
-taxa_table <- "../02_tabletax/dada2_16s_taxa.txt"
+taxa_table <- "dada2_16s_taxa.txt"
 taxmat <- as.matrix(read.delim(taxa_table))
 
 # Construct a phyloseq subject
@@ -32,8 +32,5 @@ names(dna) <- taxa_names(ps.16s)
 ps.16s <- merge_phyloseq(ps.16s, dna)
 taxa_names(ps.16s) <- paste0("ASV", seq(ntaxa(ps.16s)))
 
-# Recover DNA sequence and save in fasta format
-rep.seq <- refseq(ps.16s)
-Biostrings::writeXStringSet(rep.seq,  file = "results/rep_seqs.fasta", format = "fasta")
 
 
