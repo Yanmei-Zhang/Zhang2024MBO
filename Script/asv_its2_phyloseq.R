@@ -36,23 +36,3 @@ taxa_names(ps.its) <- paste0("ASV", seq(ntaxa(ps.its)))
 rep.seq <- refseq(ps.its)
 Biostrings::writeXStringSet(rep.seq,  file = "results/rep_seqs.fasta", format = "fasta")
 
-# Construct phylogenetic tree
-# sequence alignment
-mult <- msa(rep.seq, method="ClustalW", type="dna", order="input")
-phang.align <- as.phyDat(mult, type="DNA")
-dm <- dist.ml(phang.align)
-treeNJ <- NJ(dm) # Note, tip order != sequence order
-fit = pml(treeNJ, data=phang.align)
-
-## negative edges length changed to 0!
-fitGTR <- update(fit, k=4, inv=0.2)
-fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
-                    rearrangement = "stochastic", control = pml.control(trace = 0))
-detach("package:phangorn", unload=TRUE)
-
-# Merge phylo tree into phyloseq
-ps.its <- merge_phyloseq(ps.its, phy_tree(fitGTR$tree))
-
-save.image(file="asv_its2_phyloseq.RData")
-saveRDS(ps.its, "results/ps.its.rds")
-
