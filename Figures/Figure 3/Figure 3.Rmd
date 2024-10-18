@@ -1,5 +1,5 @@
 ---
-title: "Figure 3. Read count summary for amplicon sequencing data "
+title: "Figure 3. Read count summary for amplicon sequencing data"
 author:"Yanmei Zhang"
 data:"2024/1/1"
 output: html_notebook
