@@ -1,0 +1,105 @@
+---
+title: "Figure 3. . Nonmetric multidimensional scaling (NMDS) ordination plots"
+author:"Yanmei Zhang"
+data:"2024/1/1"
+output: html_notebook
+---
+
+## Statistics
+### Permanova
+Permanova will tell you if an experimental factor is important for describing differences between your samples of multivariate data.
+```{r}
+ps_adonis <- function(x, formula) {
+  otu_table <- as.data.frame(otu_table(x))
+  otu_norm <-  t(t(otu_table)/colSums(otu_table,na=T)) * 1000 
+  otu_log <-  log2(otu_norm + 1)
+  temp_map <- data.frame(sample_data(x))
+  adonis2(as.formula(paste("t(otu_log) ~ ", formula, sep = "")), data = temp_map)
+}
+```
+
+```{r}
+whole_permanova <- ps_adonis(ps2, formula = "Protocol*Year_since_decay_start*Tree_host+Tree_log")
+whole_permanova
+
+birch_permanova <- ps_adonis(ps2 %>% subset_samples(Tree_host == "paper_birch"), 
+                             formula = "Protocol*Year_since_decay_start+Tree_log")
+birch_permanova
+pine_permanova <- ps_adonis(ps2 %>% subset_samples(Tree_host == "red_pine"), 
+                            formula = "Protocol*Year_since_decay_start+Tree_log")
+pine_permanova
+```
+
+### NMDS
+So now that we know that some of these factors are important, let's go ahead and visualize the clustering patterns with NMDS.
+```{r}
+ps_NMDS <- function(x){
+  otu_table <- as.data.frame(otu_table(x))
+  otu_norm <-  t(t(otu_table)/colSums(otu_table,na=T)) * 1000 
+  otu_log <-  log2(otu_norm + 1)
+  temp_map <- data.frame(sample_data(x))
+  set.seed(1)
+  # NMDS
+  vare.mds <- metaMDS(t(otu_log), distance = "bray")
+  vare.mds
+  # Extract the first two axis
+  point = scores(vare.mds)
+  # Merge sample data and points 
+  index = merge(temp_map, point[["sites"]], by="row.names",all=F)
+  return(index)
+}
+```
+
+```{r}
+## All data
+ps.NMDS <- ps_NMDS(ps2)
+p.all <- ps.NMDS %>% 
+  ggplot(aes(x=NMDS1, y=NMDS2, color=factor(Protocol, level = c("QIAGEN", "CTAB")),
+             shape=as.character(Year_since_decay_start))) +
+  geom_point(size=1, aes(fill=factor(Protocol, level = c("QIAGEN", "CTAB")), alpha=Tree_host)) +
+  geom_point(size=1) +   
+  scale_shape_manual(values = c(21,22,24)) +
+  scale_color_manual(values = c("#F8766D", "#00BA38")) +
+  scale_fill_manual(values = c("#F8766D", "#00BA38")) +
+  scale_alpha_manual(values = c("paper_birch"=0, "red_pine"=1)) +
+  labs(title="NMDS of fungal Communities (Stress=0.2136)") +
+  theme_bw(7) +
+  theme(legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank()) 
+
+p.all
+
+## Birch data 
+ps.NMDS.birch <- ps_NMDS(ps2 %>% subset_samples(Tree_host == "paper_birch"))
+
+p.birch <- ps.NMDS.birch %>% 
+  ggplot(aes(x=NMDS1, y=NMDS2, color=factor(Protocol, level = c("QIAGEN", "CTAB")),
+             shape=as.character(Year_since_decay_start))) +
+  geom_point(size=1) +
+  scale_shape_manual(values = c(21,22,24)) +
+  scale_color_manual(values = c("#F8766D", "#00BA38")) +
+  scale_fill_manual(values = c("#F8766D", "#00BA38")) +
+  labs(title="NMDS of fungal Communities (Stress=0.1030)") +
+  theme_bw(7) +
+  theme(legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank()) 
+
+p.birch
+
+## Pine data 
+ps.NMDS.pine <- ps_NMDS(ps2 %>% subset_samples(Tree_host == "red_pine"))
+
+p.pine <- ps.NMDS.pine %>% 
+  ggplot(aes(x=NMDS1, y=NMDS2, color=factor(Protocol, level = c("QIAGEN", "CTAB")),
+             shape=as.character(Year_since_decay_start))) +
+  geom_point(size=1, aes(fill=factor(Protocol, level = c("QIAGEN", "CTAB")))) +
+  scale_shape_manual(values = c(21,22,24)) +
+  scale_color_manual(values = c("#F8766D", "#00BA38")) +
+  scale_fill_manual(values = c("#F8766D", "#00BA38")) +
+  labs(title="NMDS of fungal Communities (Stress=0.1444)") +
+  theme_bw(7) +
+  theme(legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank()) 
+
+p.pine
+```
