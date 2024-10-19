@@ -1,0 +1,126 @@
+---
+title: "Figure 2. The copy number of fungal ITS2 (A) and bacterial 16S rRNA V4 (B) gene"
+author:"Yanmei Zhang"
+data:"2024/1/1"
+output: html_notebook
+---
+
+This is code to replicate the analyses and pictures from my DNA extraction method paper
+Code developed by Yanmei zhang
+
+## Data pre-processing
+```{r}
+input_file <- "DNA_quantification.csv"
+data=read.csv(input_file, header=T)
+str(data)
+
+input_file1 <- "Copy_number_16s_its.csv"
+data1=read.csv(input_file1, header=T, check.names = F)
+str(data1)
+
+data2 <- merge(data, data1, by = "Sample.ID")
+
+# Convert the class of some variables to factor
+data2 <- data2 %>%
+  convert_as_factor(Tree_log, Tree_host, Year_since_decay_start, Protocol, When, Year)
+data2$Protocol=factor(data2$Protocol, levels = c('QIAGEN', 'CTAB', 'SDS')) 
+data2$Year_since_decay_start<- factor(data2$Year_since_decay_start, 
+                       levels = c(0, 1, 7),
+                       labels = c("0", "1", "7"))
+data2$Fungal_copy_number <- as.numeric(data2$Fungal_copy_number)
+data2$Bacterial_copy_number <- as.numeric(data2$Bacterial_copy_number)
+str(data2)
+```
+
+## Stats of unsuccesful PCR
+```{r}
+sum(is.na(data2$Fungal_copy_number))
+sum(is.na(data2[data2$Protocol == "CTAB", ]$Fungal_copy_number))
+sum(is.na(data2[data2$Protocol == "QIAGEN", ]$Fungal_copy_number))
+
+sum(is.na(data2$Bacterial_copy_number))
+sum(is.na(data2[data2$Protocol == "CTAB", ]$Bacterial_copy_number))
+sum(is.na(data2[data2$Protocol == "QIAGEN", ]$Bacterial_copy_number))
+
+sum(data2$Fungal_copy_number<16700, na.rm = T)
+sum(data2[data2$Protocol == "CTAB", ]$Fungal_copy_number<16700, na.rm = T)
+sum(data2[data2$Protocol == "QIAGEN", ]$Fungal_copy_number<16700)
+
+sum(data2$Bacterial_copy_number<16700, na.rm = T)
+sum(data2[data2$Protocol == "CTAB", ]$Bacterial_copy_number<16700, na.rm = T)
+sum(data2[data2$Protocol == "QIAGEN", ]$Bacterial_copy_number<16700)
+
+```
+
+## preliminary tests
+```{r}
+data2.wide <- data2 %>% 
+  select(Tree_log, Tree_host, Year_since_decay_start,Protocol, Fungal_copy_number) %>% 
+  spread(key = "Protocol", value = "Fungal_copy_number")  %>% 
+  mutate(differences = QIAGEN - CTAB)
+data2.wide %>% identify_outliers(differences)
+data2.wide %>% shapiro_test(differences) 
+
+data2.wide <- data2 %>% 
+  select(Tree_log, Tree_host, Year_since_decay_start,Protocol, Bacterial_copy_number) %>% 
+  spread(key = "Protocol", value = "Bacterial_copy_number")  %>% 
+  mutate(differences = QIAGEN - CTAB)
+data2.wide %>% identify_outliers(differences)
+data2.wide %>% shapiro_test(differences) 
+# The data have outlizers and don't have a normal distribution. The non-parametric tests, such as Wilcoxon test, are recommended.
+```
+
+## Visualization
+Fungi
+```{r}
+# Visualization
+bxp <- ggboxplot(
+  data2, x = "Protocol", y = "Fungal_copy_number", color = "Protocol", fill ="Protocol",
+  add = "jitter", add.params = list(size=1, alpha=0.3), alpha =0.3,
+  short.panel.labs = FALSE) +
+  scale_color_manual(values =  c("#F8766D", "#00BA38")) +
+  scale_fill_manual(values =  c("#F8766D", "#00BA38"))
+
+bxp
+
+## wilcoxon test
+stat.test <- data2 %>% 
+  rstatix::wilcox_test(Fungal_copy_number ~ Protocol, p.adjust.method = "bonferroni", paired = T) %>%
+  add_significance() 
+
+stat.test <- stat.test %>% add_xy_position(x = "Protocol")
+
+bxp1 <- bxp +
+  stat_pvalue_manual(stat.test, tip.length = 0, hide.ns = TRUE)  +
+  theme_bw(7) +
+  theme(legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank(),
+        axis.title.x = element_blank()) 
+```
+
+Bacteria
+```{r}
+# Visualization
+bxp <- ggboxplot(
+  data2, x = "Protocol", y = "Bacterial_copy_number", color = "Protocol", fill ="Protocol",
+  add = "jitter", add.params = list(size=1, alpha=0.3), alpha =0.3,
+  short.panel.labs = FALSE) +
+  scale_color_manual(values =  c("#F8766D", "#00BA38")) +
+  scale_fill_manual(values =  c("#F8766D", "#00BA38"))
+
+bxp
+
+## wilcoxon test
+stat.test <- data2 %>% 
+  rstatix::wilcox_test(Bacterial_copy_number ~ Protocol, p.adjust.method = "bonferroni", paired = T) %>%
+  add_significance() 
+
+stat.test <- stat.test %>% add_xy_position(x = "Protocol")
+
+bxp1 <- bxp +
+  stat_pvalue_manual(stat.test, tip.length = 0, hide.ns = TRUE)  +
+  theme_bw(7) +
+  theme(legend.key.size = unit(0.2, "cm"),
+        legend.title = element_blank(),
+        axis.title.x = element_blank()) 
+```
