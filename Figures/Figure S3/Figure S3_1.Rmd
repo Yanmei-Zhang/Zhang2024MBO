@@ -1,0 +1,210 @@
+---
+title: "Figure S3. Rarefaction curves for sequenced samples"
+author:"Yanmei Zhang"
+data:"2024/1/1"
+output: html_notebook
+---
+
+This is code to replicate the analyses and pictures from my DNA extraction method paper
+Code developed by Yanmei zhang
+
+
+## Rarefy the asv table
+### Data summary
+```{r}
+# Summarize table
+sample.sum <- data.frame(sample_data(ps1)) %>%
+  mutate(sum = sample_sums(ps1)) %>% 
+  mutate(SampleID = row.names(.)) %>%
+  mutate(status = ifelse(Year_since_decay_start %in% c(0), "non_decayed", "decayed"))   
+
+sample.sum  %>%
+  group_by(Tree_host, status) %>%
+  dplyr::reframe(mean(sum), sd(sum), range(sum), n())
+
+sample.sum  %>%
+  group_by(status) %>%
+  dplyr::reframe(mean(sum), sd(sum), range(sum), n())
+
+sum(sample.sum[sample.sum$status == "non_decayed", ]$sum<1000) #12
+sum(sample.sum[sample.sum$status == "decayed", ]$sum<1000) #0
+
+ps1.nondecayed <- subset_samples(ps1, When == "decay_start")
+nondecayed.sample.sum <- data.frame(sample_data(ps1.nondecayed)) %>%
+  mutate(sum = sample_sums(ps1.nondecayed)) %>%
+  mutate(SampleID = row.names(.))
+
+ps1.decayed <- subset_samples(ps1, When %in%  c("early", "late"))
+decayed.sample.sum <- data.frame(sample_data(ps1.decayed)) %>%
+  mutate(sum = sample_sums(ps1.decayed)) %>%
+  mutate(SampleID = row.names(.))
+```
+
+### non_decayed
+```{r}
+# Set a threshold to remove low reads samples
+ps1.nondecayed.r <- subset_samples(ps1.nondecayed, sample_sums(ps1.nondecayed)>=1072) # 12 samples removed from birch time 0 # if 6854, 18 samples removed from time 0 # if 200, 0 samples removed
+# Remove taxonomy with 0 reads
+ps1.nondecayed.r= prune_taxa(taxa_sums(ps1.nondecayed.r)>0, ps1.nondecayed.r)
+
+# rarefy curve
+otu_tab <- t(abundances(ps1.nondecayed))
+
+# output the rarefy table
+out <- rarecurve(otu_tab, step = 50, sample = 1072, label = T, tidy = TRUE)
+colnames(out) <- c("sampleID", "raw.read", "ASV")
+# Sampling info
+groupings <- data.frame(sample_data(ps1.nondecayed))
+groupings$sampleID <- row.names(groupings)
+
+out_rare_nondecayed <- out %>%
+  left_join(groupings, by = "sampleID")
+
+p <- ggplot(data = out_rare_nondecayed ) +
+  geom_line(aes(x = raw.read, y =ASV, group = sampleID, colour = When), linewidth = .2) +
+  geom_text(data = out_rare_nondecayed  %>% #here we need coordinates of the labels
+              group_by(sampleID) %>% #first group by samples
+              dplyr::reframe(max_ASV = max(ASV), #find max OTU
+                        max_raw = max(raw.read) + 10,#find max raw read
+                        Tree_host = Tree_host,
+                        When =When), 
+              aes(x = max_raw, y = max_ASV, label = sampleID, colour = When), size = 1.7, check_overlap = T, hjust = 0)+
+  geom_vline(xintercept= 1072, linetype=2, col = "red") +
+  facet_wrap(~Tree_host) +
+  ylab("ASV") + xlab("Raw Reads") +
+  scale_x_continuous(labels =  scales::scientific_format())+
+  scale_color_manual(values = c("#66A61E","blue", "#D95F02")) +
+  theme_bw(7) +
+  theme(legend.key.size = unit(0.2, "cm"),
+                    legend.title = element_blank())
+p
+```
+
+### Decayed
+```{r}
+# Set a threshold to remove low reads samples
+ps1.decayed.r <- subset_samples(ps1.decayed, sample_sums(ps1.decayed)>=20084) #16 samples removed; 1 samples removed if >12203
+# Remove taxonomy with 0 reads
+ps1.decayed.r = prune_taxa(taxa_sums(ps1.decayed.r)>0, ps1.decayed.r)
+
+# rarefy curve
+otu_tab <- t(abundances(ps1.decayed))
+
+# output the rarefy table
+out <- rarecurve(otu_tab, step = 50, sample = 20084, label = T, tidy = TRUE)
+colnames(out) <- c("sampleID", "raw.read", "ASV")
+# Sampling info
+groupings <- data.frame(sample_data(ps1.decayed))
+groupings$sampleID <- row.names(groupings)
+
+out_rare_decayed <- out %>%
+  left_join(groupings, by = "sampleID")
+
+p <- ggplot(data = out_rare_decayed) +
+  geom_line(aes(x = raw.read, y = ASV, group = sampleID, colour = When), linewidth = .2) +
+  geom_text(data = out_rare_decayed %>% #here we need coordinates of the labels
+              group_by(sampleID) %>% #first group by samples
+              dplyr::reframe(max_ASV = max(ASV), #find max ASV
+                        max_raw = max(raw.read) + 10,#find max raw read
+                        Tree_host = Tree_host,
+                        When =When), 
+              aes(x = max_raw, y = max_ASV, label = sampleID, colour = When), size = 1.5, check_overlap = T, hjust = 0)+
+  geom_vline(xintercept= 20084, linetype=2, col = "red") +
+  facet_wrap(~Tree_host) +
+  ylab("ASV") + xlab("Raw Reads") +
+  scale_x_continuous(labels =  scales::scientific_format())+
+  scale_color_manual(values = c("blue", "#D95F02")) +
+  theme_bw(7) +
+  theme(legend.key.size = unit(0.2, "cm"),
+                    legend.title = element_blank()) 
+p
+```
+
+## Alpha diversity after rarefy
+First requires that we have count data that is normalized. We will firstly use rarefaction for this job. I hate this method because we have to throw away so much of the data. For non decayd samples, the minimum sequencing depth was 201 sequences. We will randomly sample 1072 sequences from each sample. For non decayd samples, the minimum sequencing depth was 8699 sequences. We will randomly sample 20084 sequences from each sample. 
+```{r}
+# Calculation alpha index
+alpha_index <- function(x,  method = 'richness', tree = NULL, base = exp(1)) {
+  x.otu <- t(as.data.frame(otu_table(x)))
+  if (method == 'richness') result <- rowSums(x.otu> 0)   
+  else if (method == 'chao1') result <- estimateR(x.otu)[2, ]    
+  else if (method == 'ace') result <- estimateR(x.otu)[4, ]    
+  else if (method == 'shannon') result <- vegan::diversity(x.otu, index = 'shannon', base = base)    
+  else if (method == 'simpson') result <- vegan::diversity(x.otu, index = 'simpson')    #Gini-Simpson 
+  else if (method == 'pielou') result <- vegan::diversity(x.otu, index = 'shannon', base = base) / log(estimateR(x.otu)[1, ], base)  
+  else if (method == 'gc') result <- 1 - rowSums(x.otu == 1) / rowSums(x.otu)    #goods_coverage
+  else if (method == 'pd' & !is.null(tree)) {    #PD_whole_tree
+    pd <- pd(x.otu, tree, include.root = FALSE)
+    result <- pd[ ,1]
+    names(result) <- rownames(pd)
+  }
+  result
+}
+
+# Calculation in multiple trails to get the mean value of alpha index to minimize the effect of rarefy sampling
+alpha_index_mean <- function(x, trials, method, tree)  {
+  alpha_m<-matrix(nrow=nsamples(x), ncol=trials)
+  row.names(alpha_m)<-sample_names(x)
+  set.seed(3)
+
+  for(i in 1:trials){
+     # Rarefy to min depth
+    r<-rarefy_even_depth(x, sample.size=min(sample_sums(x)), verbose=FALSE, replace=TRUE) 
+
+    r.alpha.index <- alpha_index(r, method = method, tree = tree)
+    alpha_m[ ,i]<-r.alpha.index
+  }
+  
+  SampleID<-row.names(alpha_m)
+  alpha_mean<-apply(alpha_m, 1, mean)
+  alpha_sd<-apply(alpha_m, 1, sd)
+  alpha_measure<-rep(method, nsamples(x))
+  alpha_stats<-data.frame(SampleID, alpha_mean, alpha_sd, alpha_measure)
+}
+```
+
+### non-decayed
+```{r}
+nondecayed_shannon_mean <- alpha_index_mean(ps1.nondecayed.r, trials=100, method = 'shannon')
+nondecayed_richness_mean <- alpha_index_mean(ps1.nondecayed.r, trials=100, method = 'richness')
+nondecayed_eveness_mean <- alpha_index_mean(ps1.nondecayed.r, trials=100, method = 'pielou')
+nondecayed_faith_mean <- alpha_index_mean(ps1.nondecayed.r, tree =
+                                            phy_tree(ps1.nondecayed.r), trials=100, method
+                                          = 'pd')
+
+nondecayed_alpha<-rbind(nondecayed_shannon_mean, nondecayed_richness_mean,
+                        nondecayed_eveness_mean,nondecayed_faith_mean) 
+
+design <- data.frame(sample_data(ps1.nondecayed.r)) %>% mutate(SampleID = row.names(.))
+nondecayed_adiv_mean <- nondecayed_alpha%>% 
+  inner_join(design, by="SampleID")
+```
+
+
+### decayed
+```{r}
+decayed_shannon_mean <- alpha_index_mean(ps1.decayed.r, trials=100, method = 'shannon')
+decayed_richness_mean <- alpha_index_mean(ps1.decayed.r, trials=100, method = 'richness')
+decayed_eveness_mean <- alpha_index_mean(ps1.decayed.r, trials=100, method = 'pielou')
+decayed_faith_mean <- alpha_index_mean(ps1.decayed.r, tree =
+                                            phy_tree(ps1.decayed.r), trials=100, method =
+                                         'pd')
+   
+decayed_alpha<-rbind(decayed_shannon_mean, decayed_richness_mean, decayed_eveness_mean,
+                     decayed_faith_mean) 
+
+design <- data.frame(sample_data(ps1.decayed.r)) %>% mutate(SampleID = row.names(.))
+decayed_adiv_mean <- decayed_alpha%>% 
+  inner_join(design, by="SampleID")
+```
+
+### Combined
+```{r}
+adiv_mean_comb <- rbind(nondecayed_adiv_mean, decayed_adiv_mean)
+
+adiv_mean_comb$alpha_measure<-factor(adiv_mean_comb$alpha_measure, 
+                           levels = c("richness", "shannon", "pielou", "pd"),
+                           labels = c("Richness", "Shannon", "Pielou Evenness", "Faith PD"))
+
+adiv_mean_comb$Protocol<-factor(adiv_mean_comb$Protocol, level = c("QIAGEN", "CTAB"))
+```
