@@ -5,6 +5,9 @@ data:"2024/1/1"
 output: html_notebook
 ---
 
+This is code to replicate the analyses and pictures from my DNA extraction method paper
+Code developed by Yanmei zhang
+
 ```{r}
 # How many phylum would be present after filtering? # 12
 length(get_taxa_unique(ps2, taxonomic.rank="Phylum"))
