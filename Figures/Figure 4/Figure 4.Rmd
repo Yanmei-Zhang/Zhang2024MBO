@@ -5,6 +5,9 @@ data:"2024/1/1"
 output: html_notebook
 ---
 
+This is code to replicate the analyses and pictures from my DNA extraction method paper
+Code developed by Yanmei zhang
+
 ## Statistics
 ### Permanova
 Permanova will tell you if an experimental factor is important for describing differences between your samples of multivariate data.
