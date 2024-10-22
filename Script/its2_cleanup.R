@@ -1,10 +1,10 @@
 # This is code to replicate the analyses and pictures from my DNA extraction method paper 
 # *Code developed by Yanmei zhang*
 
-# ITS2 amplicon cleanup in Cloquet DNA optimization trial"
+# ITS2 amplicon cleanup in Cloquet DNA optimization trial
 
 ## Load packages and data
-ps.its = readRDS("ps.its.rds")
+ps.its = readRDS("../05_tophyloseq/results/ps.its.rds")
 sample_data(ps.its)$Protocol <-factor(sample_data(ps.its)$Protocol, level = c("QIAGEN",
                                                                               "CTAB"))
 ## Statistic of raw reads befpre processing
@@ -64,7 +64,7 @@ King_stat <- Kingdoms %>%
   as.data.frame()
 
 ## Identifying and remove contaminants in marker-gene data
-Here is a link <https://benjjneb.github.io/decontam/vignettes/decontam_intro.html> to decotam instruction.
+###Here is a link <https://benjjneb.github.io/decontam/vignettes/decontam_intro.html> to decotam instruction.
 ### Inspect Library Sizes
 depth_df <- depth_track1[order(depth_track1$nonfungal_filtered),]
 depth_df$Index <- seq(nrow(depth_df))
@@ -105,6 +105,10 @@ ps1 = prune_taxa(taxa_sums(ps1)>0, ps1)
 ps2 = filter_taxa(ps1, function(x) sum(x >= 10) >= 1, TRUE)
 
 ### Make a data frame with a column for the read counts of each sample
-depth_track3 <- data.frame(sample_data(ps2)) %>%
-  mutate(quality_filtered = sample_sums(ps2)) %>%
+depth_track3 <- data.frame(sample_data(ps1)) %>%
+  mutate(quality_filtered1 = sample_sums(ps1)) %>%
   right_join(depth_track2)
+
+depth_track3 <- data.frame(sample_data(ps2)) %>%
+  mutate(quality_filtered2 = sample_sums(ps2)) %>%
+  right_join(depth_track3)
