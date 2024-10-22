@@ -5,29 +5,25 @@ data:"2024/1/1"
 output: html_notebook
 ---
 
-This is code to replicate the analyses and pictures from my DNA extraction method paper
-Code developed by Yanmei zhang
-
 ### Track sample reads depth
 Let's see the tracking summary of sequencing depth during reads processing
 ```{r}
 # Loading reads track file
 ## for fungi
-dada_track = read.delim("dada2_its2_track.txt")
+dada_track = read.delim("../03_tabletax/dada2_its2_track.txt")
 ## for bacteria, change it into
-dada_track = read.delim("dada2_16s_track.txt")
+dada_track = read.delim("../02_tabletax/dada2_16s_track.txt")
 
 dada_track <-  dada_track %>% mutate(SampleID = row.names(.))
-depth_track4 <- read.csv("sample_reading_depth_track_ntaxa.csv", row.names = 1)
+#depth_track4 <- read.csv("sample_reading_depth_track_ntaxa.csv", row.names = 1)
 
 depth_track5 <- merge(dada_track, 
-                      depth_track4[, c("SampleID", "Tree_log", "Tree_host", "Protocol",
-                                       "Year_since_decay_start", "DNA_yields", "nonbacterial_filtered",
-                                       "decontam", "quality_filtered")],
-              by = "SampleID",all = F)
+                      depth_track3[, c("SampleID", "Tree_log", "Tree_host", "Protocol", "Year_since_decay_start", "DNA_yields", 
+                                        "nonfungal_filtered", "decontam", "quality_filtered1", "quality_filtered2")],
+              by = "SampleID", all = F)
 
 
-track_l<- reshape2::melt(depth_track5, id.vars=c("SampleID", "Tree_log", "Tree_host", "Protocol",
+track_l<- reshape2::melt(depth_track5 %>% filter(Sample_or_Control == "Sample"), id.vars=c("SampleID", "Tree_log", "Tree_host", "Protocol",
                                                  "Year_since_decay_start", "DNA_yields"),
                          variable.name = "step", value.name = "reads_count")
 
