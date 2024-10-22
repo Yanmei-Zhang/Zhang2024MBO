@@ -4,7 +4,7 @@
 # 16s amplicon cleanup in Cloquet DNA optimization trial
   
 ## Load packages and data
-ps.16s = readRDS("ps.16s.rds")
+ps.16s = readRDS("../03_tophyloseq/results/ps.16s.rds")
 sample_data(ps.16s)$Protocol <-factor(sample_data(ps.16s)$Protocol, level = c("QIAGEN", "CTAB"))
 
 ## Statistic of raw reads befpre processing
@@ -136,6 +136,11 @@ ps1 = prune_taxa(taxa_sums(ps1)>0, ps1)
 ps2 = filter_taxa(ps1, function(x) sum(x >= 10) >= 1, TRUE)
 
 ### Make a data frame with a column for the read counts of each sample
-depth_track3 <- data.frame(sample_data(ps2)) %>%
-  mutate(quality_filtered = sample_sums(ps2)) %>%
+### Make a data frame with a column for the read counts of each sample
+depth_track3 <- data.frame(sample_data(ps1)) %>%
+  mutate(quality_filtered1 = sample_sums(ps1)) %>%
   right_join(depth_track2)
+
+depth_track3 <- data.frame(sample_data(ps2)) %>%
+  mutate(quality_filtered2 = sample_sums(ps2)) %>%
+  right_join(depth_track3)
