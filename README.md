@@ -5,7 +5,7 @@
 Please refer to this DADA2 workflow tutorial [dada2_SchillingLab](https://github.com/Yanmei-Zhang/DADA2_SchillingLab) to process amplicon dataset to a ASV table.
 
 - /data # ASV table, metadata and phyleseq objects for both fungi and bacteria
-- /Script # Gneeral script in this study
+- /Script # General script in this study
 - /Figures # Figures, and their corresponding raw data, R Notebook scripts and output results
 
 If you prefer to use the scripts in this paper, please cite:
